@@ -1,0 +1,271 @@
+{
+ "updated_utc": "2026-10-20T11:41:41+00:00",
+ "bbox": {
+  "lat_min": 45.49,
+  "lat_max": 45.85,
+  "lng_min": 9.0,
+  "lng_max": 9.25
+ },
+ "sensors": [
+  {
+   "idsensore": "9308",
+   "tipo": "pioggia",
+   "tipologia": "Precipitazione",
+   "stazione": "Como Villa Gallia",
+   "unita": "mm",
+   "lat": "45.81504217",
+   "lng": "9.06697886",
+   "nome_contiene_seveso": false
+  },
+  {
+   "idsensore": "14121",
+   "tipo": "pioggia",
+   "tipologia": "Precipitazione",
+   "stazione": "Milano v.Rosellini",
+   "unita": "mm",
+   "lat": "45.49120675",
+   "lng": "9.19451245",
+   "nome_contiene_seveso": false
+  },
+  {
+   "idsensore": "18264",
+   "tipo": "livello",
+   "tipologia": "Livello Idrometrico",
+   "stazione": "Cernobbio Ponte Nuovo",
+   "unita": "cm",
+   "lat": "45.83674293",
+   "lng": "9.06769274",
+   "nome_contiene_seveso": false
+  },
+  {
+   "idsensore": "19428",
+   "tipo": "pioggia",
+   "tipologia": "Precipitazione",
+   "stazione": "Mariano Comense campo sportivo",
+   "unita": "mm",
+   "lat": "45.68488400",
+   "lng": "9.17777300",
+   "nome_contiene_seveso": false
+  },
+  {
+   "idsensore": "4065",
+   "tipo": "pioggia",
+   "tipologia": "Precipitazione",
+   "stazione": "Cinisello Balsamo Parco Nord",
+   "unita": "mm",
+   "lat": "45.54266467",
+   "lng": "9.20560341",
+   "nome_contiene_seveso": false
+  },
+  {
+   "idsensore": "4016",
+   "tipo": "pioggia",
+   "tipologia": "Precipitazione",
+   "stazione": "Vertemate con Minoprio serre",
+   "unita": "mm",
+   "lat": "45.71901089",
+   "lng": "9.08548850",
+   "nome_contiene_seveso": false
+  },
+  {
+   "idsensore": "8165",
+   "tipo": "pioggia",
+   "tipologia": "Precipitazione",
+   "stazione": "Como viale Geno",
+   "unita": "mm",
+   "lat": "45.82025397",
+   "lng": "9.07990936",
+   "nome_contiene_seveso": false
+  },
+  {
+   "idsensore": "22307",
+   "tipo": "livello",
+   "tipologia": "Livello Idrometrico",
+   "stazione": "Seveso c.so Isonzo",
+   "unita": "cm",
+   "lat": "45.64224529",
+   "lng": "9.14525888",
+   "nome_contiene_seveso": true
+  },
+  {
+   "idsensore": "8122",
+   "tipo": "pioggia",
+   "tipologia": "Precipitazione",
+   "stazione": "Caslino d'Erba v. 4 novembre",
+   "unita": "mm",
+   "lat": "45.83539031",
+   "lng": "9.23237261",
+   "nome_contiene_seveso": false
+  },
+  {
+   "idsensore": "8199",
+   "tipo": "pioggia",
+   "tipologia": "Precipitazione",
+   "stazione": "Cantù Asnago",
+   "unita": "mm",
+   "lat": "45.71853181",
+   "lng": "9.10037269",
+   "nome_contiene_seveso": false
+  },
+  {
+   "idsensore": "8119",
+   "tipo": "livello",
+   "tipologia": "Livello Idrometrico",
+   "stazione": "Cantù Asnago",
+   "unita": "cm",
+   "lat": "45.71853181",
+   "lng": "9.10037269",
+   "nome_contiene_seveso": false
+  },
+  {
+   "idsensore": "8382",
+   "tipo": "livello",
+   "tipologia": "Livello Idrometrico",
+   "stazione": "Como viale Geno",
+   "unita": "cm",
+   "lat": "45.82025397",
+   "lng": "9.07990936",
+   "nome_contiene_seveso": false
+  },
+  {
+   "idsensore": "10554",
+   "tipo": "pioggia",
+   "tipologia": "Precipitazione",
+   "stazione": "Saronno v.Santuario",
+   "unita": "mm",
+   "lat": "45.62735705",
+   "lng": "9.02640138",
+   "nome_contiene_seveso": false
+  },
+  {
+   "idsensore": "3118",
+   "tipo": "livello",
+   "tipologia": "Livello Idrometrico",
+   "stazione": "Milano Niguarda",
+   "unita": "cm",
+   "lat": "45.52580195",
+   "lng": "9.19222420",
+   "nome_contiene_seveso": false
+  },
+  {
+   "idsensore": "22272",
+   "tipo": "pioggia",
+   "tipologia": "Precipitazione",
+   "stazione": "Seveso v. Europa Unita",
+   "unita": "mm",
+   "lat": "45.64358606",
+   "lng": "9.14554466",
+   "nome_contiene_seveso": true
+  },
+  {
+   "idsensore": "30539",
+   "tipo": "pioggia",
+   "tipologia": "Precipitazione",
+   "stazione": "Pogliano Milanese",
+   "unita": "mm",
+   "lat": "45.53557672",
+   "lng": "9.00519996",
+   "nome_contiene_seveso": false
+  },
+  {
+   "idsensore": "30523",
+   "tipo": "livello",
+   "tipologia": "Livello Idrometrico",
+   "stazione": "Lainate SP 109",
+   "unita": "cm",
+   "lat": "45.57409116",
+   "lng": "9.04819014",
+   "nome_contiene_seveso": false
+  },
+  {
+   "idsensore": "30525",
+   "tipo": "pioggia",
+   "tipologia": "Precipitazione",
+   "stazione": "Paderno Dugnano Palazzolo Parco Borghetto",
+   "unita": "mm",
+   "lat": "45.58313746",
+   "lng": "9.15773268",
+   "nome_contiene_seveso": false
+  },
+  {
+   "idsensore": "8148",
+   "tipo": "livello",
+   "tipologia": "Livello Idrometrico",
+   "stazione": "Costa Masnaga Lambrugo",
+   "unita": "cm",
+   "lat": "45.76310739",
+   "lng": "9.24923839",
+   "nome_contiene_seveso": false
+  },
+  {
+   "idsensore": "8211",
+   "tipo": "pioggia",
+   "tipologia": "Precipitazione",
+   "stazione": "Misinto",
+   "unita": "mm",
+   "lat": "45.66138472",
+   "lng": "9.06639475",
+   "nome_contiene_seveso": false
+  },
+  {
+   "idsensore": "8125",
+   "tipo": "livello",
+   "tipologia": "Livello Idrometrico",
+   "stazione": "Milano v.Feltre",
+   "unita": "cm",
+   "lat": "45.49163405",
+   "lng": "9.24873914",
+   "nome_contiene_seveso": false
+  },
+  {
+   "idsensore": "14741",
+   "tipo": "pioggia",
+   "tipologia": "Precipitazione",
+   "stazione": "Rho Scalo Fiorenza - Prato",
+   "unita": "mm",
+   "lat": "45.51781084",
+   "lng": "9.08792330",
+   "nome_contiene_seveso": false
+  },
+  {
+   "idsensore": "30533",
+   "tipo": "pioggia",
+   "tipologia": "Precipitazione",
+   "stazione": "Monza v.Monte Generoso",
+   "unita": "mm",
+   "lat": "45.58862553",
+   "lng": "9.24580749",
+   "nome_contiene_seveso": false
+  },
+  {
+   "idsensore": "8121",
+   "tipo": "livello",
+   "tipologia": "Livello Idrometrico",
+   "stazione": "Paderno Dugnano Palazzolo",
+   "unita": "cm",
+   "lat": "45.58280558",
+   "lng": "9.15897783",
+   "nome_contiene_seveso": false
+  },
+  {
+   "idsensore": "8124",
+   "tipo": "livello",
+   "tipologia": "Livello Idrometrico",
+   "stazione": "Caslino d'Erba v. 4 novembre",
+   "unita": "cm",
+   "lat": "45.83539031",
+   "lng": "9.23237261",
+   "nome_contiene_seveso": false
+  },
+  {
+   "idsensore": "8197",
+   "tipo": "pioggia",
+   "tipologia": "Precipitazione",
+   "stazione": "Lambrugo",
+   "unita": "mm",
+   "lat": "45.76194769",
+   "lng": "9.24444953",
+   "nome_contiene_seveso": false
+  }
+ ]
+}
