@@ -79,8 +79,12 @@ def http(url: str, method: str = "GET", body: dict | None = None,
                     "ms": round((time.monotonic() - t0) * 1000), "body": raw}
     except urllib.error.HTTPError as e:
         snippet = e.read()[:300].decode("utf-8", "replace")
+        keep = ("retry-after", "x-ratelimit-limit", "x-ratelimit-remaining",
+                "x-ratelimit-reset", "x-socrata-requestid", "server", "via", "cf-ray")
+        hdrs = {k.lower(): v for k, v in e.headers.items() if k.lower() in keep} if e.headers else {}
         return {"ok": False, "status": e.code, "error": f"HTTP {e.code}",
-                "snippet": snippet, "ms": round((time.monotonic() - t0) * 1000)}
+                "snippet": snippet, "headers": hdrs,
+                "ms": round((time.monotonic() - t0) * 1000)}
     except Exception as e:  # rete, DNS, timeout, TLS...
         return {"ok": False, "status": None, "error": f"{type(e).__name__}: {e}",
                 "ms": round((time.monotonic() - t0) * 1000)}
@@ -102,13 +106,36 @@ def public(r: dict) -> dict:
     return {k: v for k, v in r.items() if k != "body"}
 
 
-def socrata(ds: str, params: dict, timeout: int = 30) -> tuple[dict, list | None]:
-    url = f"{SOCRATA}/{ds}.json?" + urllib.parse.urlencode(params)
-    headers = {}
+def socrata_auth() -> tuple[dict, str]:
+    """App Token (header X-App-Token) oppure API Key (Key ID + Key Secret, Basic auth)."""
+    import base64
+    key_id = os.environ.get("SOCRATA_KEY_ID")
+    key_secret = os.environ.get("SOCRATA_KEY_SECRET")
+    if key_id and key_secret:
+        cred = base64.b64encode(f"{key_id}:{key_secret}".encode()).decode()
+        return {"Authorization": f"Basic {cred}"}, "api_key"
     token = os.environ.get("SOCRATA_APP_TOKEN")
     if token:
-        headers["X-App-Token"] = token
-    r = http(url, headers=headers, timeout=timeout)
+        return {"X-App-Token": token.strip()}, "app_token"
+    return {}, "anonimo"
+
+
+RETRY_WAITS_S = (20, 60)  # attese prima dei nuovi tentativi dopo un HTTP 429
+
+
+def socrata(ds: str, params: dict, timeout: int = 30) -> tuple[dict, list | None]:
+    url = f"{SOCRATA}/{ds}.json?" + urllib.parse.urlencode(params)
+    headers, _ = socrata_auth()
+    attempts = []
+    for wait in (0, *RETRY_WAITS_S):
+        if wait:
+            time.sleep(wait)
+        r = http(url, headers=headers, timeout=timeout)
+        attempts.append(r.get("status"))
+        if r.get("status") != 429:
+            break
+    if len(attempts) > 1:
+        r["attempts"] = attempts
     rows = as_json(r)
     if rows is not None and not isinstance(rows, list):
         r["ok"], r["error"], rows = False, f"risposta inattesa: {str(rows)[:200]}", None
@@ -196,6 +223,8 @@ def probe_arpa(sensors: list[dict], now: datetime, report: dict) -> None:
     out["request"] = public(r)
     out["window_h"] = ARPA_WINDOW_H
     if rows is None:
+        if r.get("status") == 429:
+            return
         r2, sample = socrata(DS_CURRENT, {"$limit": "2", "$order": ":id"})
         out["sample_request"] = public(r2)
         out["sample_rows"] = sample
@@ -324,7 +353,8 @@ def main() -> int:
     now = datetime.now(timezone.utc)
     full = now.minute < 10 or bool(os.environ.get("PROBE_FULL"))
     report = {"run_utc": now.isoformat(timespec="seconds"), "full": full,
-              "socrata_token": bool(os.environ.get("SOCRATA_APP_TOKEN"))}
+              "socrata_token": socrata_auth()[1] != "anonimo",
+              "socrata_auth": socrata_auth()[1]}
 
     for name, fn in (
         ("arpa", lambda: probe_arpa(discover_sensors(report), now, report)),
@@ -341,7 +371,7 @@ def main() -> int:
 
     # Riepilogo leggibile nel log di GitHub Actions
     a, rd = report.get("arpa", {}), report.get("radar", {})
-    print(f"Esecuzione {report['run_utc']} (completa: {full})")
+    print(f"Esecuzione {report['run_utc']} (completa: {full}, accesso ARPA: {report['socrata_auth']})")
     print(f"  Scoperta sensori: {report.get('discovery', {}).get('n', '?')} "
           f"(errore: {report.get('discovery', {}).get('error', 'nessuno')})")
     print(f"  ARPA: {a.get('sensors_with_data', 0)} sensori con dati recenti, "
