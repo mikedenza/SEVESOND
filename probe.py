@@ -56,6 +56,7 @@ OM_POINTS = {
 # ARPA pubblica gli orari in ora solare (UTC+1) tutto l'anno.
 ORA_SOLARE = timezone(timedelta(hours=1))
 SENSORS_MAX_AGE_H = 24
+ARPA_WINDOW_H = 6   # finestra di dati recenti richiesta a ogni esecuzione
 
 
 # ---------------------------------------------------------------- HTTP
@@ -101,13 +102,13 @@ def public(r: dict) -> dict:
     return {k: v for k, v in r.items() if k != "body"}
 
 
-def socrata(ds: str, params: dict) -> tuple[dict, list | None]:
+def socrata(ds: str, params: dict, timeout: int = 30) -> tuple[dict, list | None]:
     url = f"{SOCRATA}/{ds}.json?" + urllib.parse.urlencode(params)
     headers = {}
     token = os.environ.get("SOCRATA_APP_TOKEN")
     if token:
         headers["X-App-Token"] = token
-    r = http(url, headers=headers)
+    r = http(url, headers=headers, timeout=timeout)
     rows = as_json(r)
     if rows is not None and not isinstance(rows, list):
         r["ok"], r["error"], rows = False, f"risposta inattesa: {str(rows)[:200]}", None
@@ -153,7 +154,7 @@ def discover_sensors(report: dict) -> list[dict]:
 
     sensors = []
     for row in rows:
-        if row.get("datastop"):  # sensore dismesso, se il campo esiste
+        if row.get("datastop") or str(row.get("storico", "")).upper() == "S":  # sensore dismesso
             continue
         tipo = row.get("tipologia", "")
         sensors.append({
@@ -181,30 +182,43 @@ def probe_arpa(sensors: list[dict], now: datetime, report: dict) -> None:
         out["error"] = "nessun sensore trovato (vedi discovery)"
         return
 
+    # Il dataset "corrente" contiene anni di misure: un'aggregazione su tutto
+    # va in timeout. Si chiede solo una finestra recente, sfruttando l'indice
+    # sulla data, e l'ultimo dato per sensore si calcola qui.
     ids = ",".join(f"'{s['idsensore']}'" for s in sensors)
+    since = (now.astimezone(ORA_SOLARE) - timedelta(hours=ARPA_WINDOW_H)).strftime("%Y-%m-%dT%H:%M:%S")
     r, rows = socrata(DS_CURRENT, {
-        "$select": "idsensore, max(data) as ultima",
-        "$where": f"idsensore in ({ids})",
-        "$group": "idsensore",
-        "$limit": "1000",
-    })
+        "$select": "idsensore, data, valore, stato",
+        "$where": f"data > '{since}' and idsensore in ({ids})",
+        "$order": "data DESC",
+        "$limit": "10000",
+    }, timeout=90)
     out["request"] = public(r)
+    out["window_h"] = ARPA_WINDOW_H
     if rows is None:
         r2, sample = socrata(DS_CURRENT, {"$limit": "2", "$order": ":id"})
         out["sample_request"] = public(r2)
         out["sample_rows"] = sample
         return
+    out["rows"] = len(rows)
 
     by_id = {s["idsensore"]: s for s in sensors}
-    lags = {}
+    series: dict[str, list] = {}
     for row in rows:
+        series.setdefault(str(row.get("idsensore")), []).append(row)
+
+    lags = {}
+    for sid, pts in series.items():
+        valid = [p for p in pts if p.get("valore") not in (None, "-9999", "-9999.0")]
         try:
-            lags[str(row["idsensore"])] = minutes_since(parse_arpa_time(row["ultima"]), now)
+            if valid:
+                lags[sid] = minutes_since(max(parse_arpa_time(p["data"]) for p in valid), now)
         except (KeyError, ValueError):
             continue
     out["lag_min_per_sensor"] = lags
     out["sensors_with_data"] = len(lags)
-    out["sensors_without_data"] = len(sensors) - len(lags)
+    out["sensors_without_recent_data"] = sorted(
+        f"{s['idsensore']} {s['stazione']} ({s['tipo']})" for s in sensors if s["idsensore"] not in lags)
     if lags:
         vals = list(lags.values())
         out["lag_min"] = {"min": min(vals), "median": statistics.median(vals), "max": max(vals)}
@@ -212,28 +226,16 @@ def probe_arpa(sensors: list[dict], now: datetime, report: dict) -> None:
         if level_lags:
             out["lag_min_livelli_median"] = statistics.median(level_lags)
 
-    # Ultimi valori degli idrometri (ultime 3 ore), utili per vedere unità e plausibilità.
-    level_ids = [s["idsensore"] for s in sensors if s["tipo"] == "livello"]
-    if level_ids:
-        since = (now.astimezone(ORA_SOLARE) - timedelta(hours=3)).strftime("%Y-%m-%dT%H:%M:%S")
-        r3, vals = socrata(DS_CURRENT, {
-            "$where": f"idsensore in ({','.join(repr(i) for i in level_ids)}) and data > '{since}'",
-            "$order": "data DESC",
-            "$limit": "2000",
-        })
-        out["levels_request"] = public(r3)
-        if vals:
-            latest = {}
-            for v in vals:
-                sid = str(v.get("idsensore"))
-                latest.setdefault(sid, []).append({"t": v.get("data"), "v": v.get("valore")})
-            LATEST_FILE.write_text(json.dumps({
-                "read_utc": now.isoformat(timespec="seconds"),
-                "note": "orari in ora solare (UTC+1); -9999 = dato mancante",
-                "stations": {sid: {"stazione": by_id.get(sid, {}).get("stazione"),
-                                   "ultimi": pts[:18]} for sid, pts in latest.items()},
-            }, indent=1, ensure_ascii=False))
-            out["levels_rows"] = len(vals)
+    # Ultimi valori di idrometri e pluviometri, per controllare unità e plausibilità.
+    LATEST_FILE.write_text(json.dumps({
+        "read_utc": now.isoformat(timespec="seconds"),
+        "note": "orari in ora solare (UTC+1); -9999 = dato mancante",
+        "stations": {sid: {"stazione": by_id.get(sid, {}).get("stazione"),
+                           "tipo": by_id.get(sid, {}).get("tipo"),
+                           "ultimi": [{"t": p.get("data"), "v": p.get("valore"), "stato": p.get("stato")}
+                                      for p in pts[:18]]}
+                     for sid, pts in sorted(series.items())},
+    }, indent=1, ensure_ascii=False))
 
 
 # ---------------------------------------------------------------- Radar
@@ -342,7 +344,7 @@ def main() -> int:
     print(f"Esecuzione {report['run_utc']} (completa: {full})")
     print(f"  Scoperta sensori: {report.get('discovery', {}).get('n', '?')} "
           f"(errore: {report.get('discovery', {}).get('error', 'nessuno')})")
-    print(f"  ARPA: {a.get('sensors_with_data', 0)} sensori con dati, "
+    print(f"  ARPA: {a.get('sensors_with_data', 0)} sensori con dati recenti, "
           f"ritardo {a.get('lag_min', 'n/d')} min, errore: {a.get('request', {}).get('error', a.get('error', 'nessuno'))}")
     for p in ("SRI", "CUM3"):
         it = rd.get(p, {})
