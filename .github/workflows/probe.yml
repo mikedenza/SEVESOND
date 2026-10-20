@@ -15,13 +15,15 @@ concurrency:
 jobs:
   probe:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 8
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Esegui la sonda
         env:
           SOCRATA_APP_TOKEN: ${{ secrets.SOCRATA_APP_TOKEN }}
+          SOCRATA_KEY_ID: ${{ secrets.SOCRATA_KEY_ID }}
+          SOCRATA_KEY_SECRET: ${{ secrets.SOCRATA_KEY_SECRET }}
           PROBE_FULL: ${{ github.event_name == 'workflow_dispatch' && '1' || '' }}
         run: python3 probe.py
 
