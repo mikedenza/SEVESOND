@@ -1,38 +1,5 @@
 {
- "read_utc": "2026-11-06T11:52:37+00:00",
+ "read_utc": "2026-11-06T12:54:49+00:00",
  "note": "orari in ora solare (UTC+1); -9999 = dato mancante",
- "stations": {
-  "22307": {
-   "stazione": "Seveso c.so Isonzo",
-   "tipo": "livello",
-   "ultimi": [
-    {
-     "t": "2026-11-06T07:00:00.000",
-     "v": "-24",
-     "stato": "VA"
-    },
-    {
-     "t": "2026-11-06T06:55:00.000",
-     "v": "-25",
-     "stato": "VA"
-    }
-   ]
-  },
-  "30523": {
-   "stazione": "Lainate SP 109",
-   "tipo": "livello",
-   "ultimi": [
-    {
-     "t": "2026-11-06T07:00:00.000",
-     "v": "-5",
-     "stato": "VA"
-    },
-    {
-     "t": "2026-11-06T06:55:00.000",
-     "v": "-6",
-     "stato": "VA"
-    }
-   ]
-  }
- }
+ "stations": {}
 }
